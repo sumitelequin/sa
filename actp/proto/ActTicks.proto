@@ -1,0 +1,59 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder ActTicks.proto
+
+syntax = "proto2";
+
+import "ActTypes.proto";
+import "DataExchangeAPI.proto";
+
+package ActTicks;
+
+message TickData
+{
+	optional string instrument = 1;
+	optional double timestamp = 2;					//	tick count
+	optional sint64 price = 3;
+	optional uint32 scaledQuantity = 4;				//	scaled quantity, will be deprecated
+	optional uint64 decQuantity = 10;				//	quantity with decimals
+	optional string side = 5;
+	optional string priceSource = 6;
+	optional string aggressor = 7;
+	optional string marketUser = 8;
+	repeated DataExchangeAPI.VariantValue dexValues = 9;
+}
+
+// Request messages are passed from client->actant and are identified by RequestType enum
+enum RequestType
+{
+	REQ_SUBSCRIBE_TICKS = 0;
+	REQ_UNSUBSCRIBE_TICKS = 1;
+}
+
+// Response messages are passed from actant->client and are identified by ResponseType enum
+enum ResponseType
+{
+	RESP_SUBSCRIBE_TICKS = 0;
+	RESP_UNSUBSCRIBE_TICKS = 1;
+
+	//	broadcast messages
+	MSG_TICKS_UPDATE = 2000;
+	MSG_TICKS_INIUPDATE = 2001;
+}
+
+// Requests are passed from client system and will contain only one of the specific requests
+message Request
+{
+	optional RequestType requestType = 1;
+	optional sint32 clientId = 2;
+	repeated string products = 3;
+	repeated string dexColumns = 4;
+}
+
+// Responses are passed from actant system and will contain only one of the specific responses.
+message Response
+{
+	optional ResponseType responseType = 1;
+	optional sint32 clientId = 2;
+	optional ActAPI.OperationStatus operationStatus = 3;
+	repeated TickData ticks = 8;
+}

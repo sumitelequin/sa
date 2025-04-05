@@ -1,0 +1,53 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder ActStrategy.proto
+
+syntax = "proto2";
+
+import "ActTypes.proto";
+
+package ActInstrument;
+
+message InstrumentDefinition
+{
+	optional string	instrument = 1;
+	optional string product = 2;
+	optional string instrumentType = 3;
+	optional string expiration = 4;
+	optional sint64 strike = 5;					//	price
+	optional string priceStep = 6;
+	optional double contractSize = 7;
+	optional string multiLineName = 8;
+	repeated string deliverables = 9;
+	optional bool isOTC = 10;
+	optional string exercisability = 11;
+}
+
+// Request messages are passed from client->actant and are identified by RequestType enum
+enum RequestType
+{
+	REQ_CREATE_OTC_OPTION = 1;
+}
+
+// Response messages are passed from actant->client and are identified by ResponseType enum
+enum ResponseType
+{
+	RESP_INSTRUMENT_STREAMING = 0;
+	RESP_CREATE_OTC_OPTION = 1;
+}
+
+// Requests are passed from client system and will contain only one of the specific requests
+message Request
+{
+	optional RequestType requestType = 1;
+	optional sint32 clientId = 2;
+	repeated InstrumentDefinition instruments = 3;
+}
+
+// Responses are passed from actant system and will contain only one of the specific responses.
+message Response
+{
+	optional ResponseType responseType = 2;
+	optional sint32 clientId = 3;
+	optional ActAPI.OperationStatus operationStatus = 4;
+	repeated InstrumentDefinition instruments = 1;
+}

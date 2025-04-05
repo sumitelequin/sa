@@ -1,0 +1,21 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder ActTypes.proto
+
+syntax = "proto2";
+
+package ActPort;
+
+// Information on the automation portfolio, its subportfolios and product positions
+message Allocation
+{
+	optional string displayName = 1;				//	allocation name displayed on the GUI
+	optional string portfolioName = 2;				//	name of the physical portfolio containing the positions
+	repeated string products = 3;					//	products for which there's a position in the allocation
+}
+
+message PortfolioAllocation
+{
+	optional string underlyingProduct = 1;			//	product group of the automation portfolio
+	optional string automationPortfolio = 2;		//	name of portfolio
+	repeated Allocation allocations = 3;			//	list of physical subportfolios (only set in multi-account mode)
+}

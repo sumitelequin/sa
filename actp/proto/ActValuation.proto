@@ -1,0 +1,508 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder ActValuation.proto
+
+syntax = "proto2";
+
+import "ActTypes.proto";
+import "ActPort.proto";
+
+package ActValuation;
+
+
+message ValuationContext
+{
+	optional uint32						sequenceNumber				= 1;
+	optional UnderlyingSource			underlyingSource			= 2;
+	optional Formulas					formulas					= 3;
+	optional Corrections				corrections					= 4;
+	optional DayCorrections				dayCorrections				= 5;
+	optional Greeks						greeks						= 6;
+	optional TimeControl				timeControl					= 7;
+	optional ImpliedVolatilitySettings	impliedVolatilitySettings	= 8;
+	optional ImpliedVolatilitySmoothing	impliedVolatilitySmoothing	= 9;
+	optional BasisAdjustment			basisAdjustment				= 10;
+	optional OptionalCalculations		optionalCalculations		= 11;
+	optional Filters					filters						= 12;
+	optional PrecalcSettings			precalcSettings				= 13;
+	optional Dividends					dividends					= 14;
+	optional TimeDecay					timeDecay					= 15;
+	optional RateSettings				rateSettings				= 16;
+	optional BasisAndOffsets			basisAndOffsets				= 17;
+	optional PremiumRates				premiumRates				= 18;
+	optional StockRates					stockRates					= 19;
+	optional DividendRates				dividendRates				= 20;
+	optional VolatilitySettings			volatilitySettings			= 21;
+	optional SABRVolatility				sabrVolatility				= 22;
+	optional ManualVolatility			manualVolatility			= 23;
+}
+
+enum RequestType
+{
+	REQ_SNAPSHOT					= 1;
+	REQ_UPDATE						= 2;
+	REQ_SUBSCRIBE					= 3;
+	REQ_UNSUBSCRIBE					= 4;
+	REQ_SUBSCRIBE_ALL				= 5;
+	REQ_UNSUBSCRIBE_ALL				= 6;
+	REQ_UNDERLYING_LIST_SNAPSHOT 	= 7;
+	REQ_UNDERLYING_LIST_SUBSCRIBE 	= 8;
+	REQ_UNDERLYING_LIST_UNSUBSCRIBE = 9;
+}
+
+enum ResponseType
+{
+	RESP_SNAPSHOT						= 1;
+	RESP_UPDATE							= 2;
+	RESP_SUBSCRIBE						= 3;
+	RESP_UNSUBSCRIBE					= 4;
+	RESP_SUBSCRIBE_ALL					= 5;
+	RESP_UNSUBSCRIBE_ALL				= 6;
+	RESP_UNDERLYING_LIST_SNAPSHOT 		= 7;
+	RESP_UNDERLYING_LIST_UPDATE			= 8;
+	RESP_UNDERLYING_LIST_SUBSCRIBE 		= 9;
+	RESP_UNDERLYING_LIST_UNSUBSCRIBE 	= 10;
+}
+
+message Request
+{
+	optional RequestType requestType			= 1;
+	optional uint32 clientId					= 2;
+	optional string underlying					= 3;
+	optional ValuationContext valuationContext 	= 4;
+}
+
+message Response
+{
+	optional ResponseType responseType				= 1;
+	optional uint32 clientId						= 2;	// only request responses
+	optional string underlying						= 3;
+	optional ActAPI.OperationStatus operationStatus = 4;
+	optional ValuationContext valuationContext		= 5;
+	repeated string underlyings						= 6;
+}
+
+// BEGIN ENUMS
+
+enum UnderlyingSourceType
+{
+	UNDERLYINGSOURCE_UNKNOWN			= 0;
+	UNDERLYINGSOURCE_TRUESPOT			= 1;
+	UNDERLYINGSOURCE_ADJUSTEDSPOT		= 2;
+	UNDERLYINGSOURCE_IMPLIEDSPOT		= 3;
+	UNDERLYINGSOURCE_DELIVERABLESPOT	= 4;
+}
+
+enum PriceSourceType
+{
+	PRICESOURCE_UNKNOWN				= 0;
+	PRICESOURCE_SPREADAVERAGE		= 1;
+	PRICESOURCE_SETTLEMENT			= 2;
+	PRICESOURCE_MANUAL				= 3;
+	PRICESOURCE_SCRIPT				= 4;
+}
+
+enum UnderlyingBboType
+{
+	UNDERLYINGBBO_UNKNOWN		= 0;
+	UNDERLYINGBBO_MAIN			= 1;
+	UNDERLYINGBBO_FOREIGN		= 2;
+	UNDERLYINGBBO_BEST			= 3;
+	UNDERLYINGBBO_INDICATIVE	= 4;
+	UNDERLYINGBBO_MODIFIER		= 5;
+	UNDERLYINGBBO_AWAY			= 6;
+}
+
+enum ImpliedVolatilityBboType
+{
+	IMPLIEDVOLATILITYBBO_UNKNOWN	= 0;
+	IMPLIEDVOLATILITYBBO_MAIN		= 1;
+	IMPLIEDVOLATILITYBBO_FOREIGN	= 2;
+}
+
+enum ImpliedVolatilityCalculationMode
+{
+	IMPLIEDVOLATILITYCALCULATIONMODE_UNKNOWN			= 0;
+	IMPLIEDVOLATILITYCALCULATIONMODE_BIDASK				= 1;
+	IMPLIEDVOLATILITYCALCULATIONMODE_AVERAGE			= 2;
+	IMPLIEDVOLATILITYCALCULATIONMODE_AVERAGEORBIDASK	= 3;
+	IMPLIEDVOLATILITYCALCULATIONMODE_AVERAGEANDBIDASK	= 4;
+	IMPLIEDVOLATILITYCALCULATIONMODE_BIDASKANDLAST		= 5;
+}
+
+enum CopyIVMode
+{
+	COPYIMPLIEDVOLATILITYMODE_UNKNOWN				= 0;
+	COPYIMPLIEDVOLATILITYMODE_AVERAGE				= 1;
+	COPYIMPLIEDVOLATILITYMODE_LAST					= 2;
+	COPYIMPLIEDVOLATILITYMODE_AWAYMARKET			= 3;
+	COPYIMPLIEDVOLATILITYMODE_AVERAGEORBIDASK		= 4;
+	COPYIMPLIEDVOLATILITYMODE_DELTAWEIGHTED			= 5;
+	COPYIMPLIEDVOLATILITYMODE_AVERAGEIFBIDANDASK	= 6;
+	COPYIMPLIEDVOLATILITYMODE_LOWESTPRICE			= 7;
+}
+
+enum VolatilityRangeSpecificationType
+{
+	VOLATILITYRANGESPECIFICATIONTYPE_MIN				= 0;
+	VOLATILITYRANGESPECIFICATIONTYPE_STANDARD			= 1;
+	VOLATILITYRANGESPECIFICATIONTYPE_CONFIGURABLTETYPE1 = 2;
+}
+
+enum SmoothThetaType
+{
+	SMOOTHTHETATYPE_UNKNOWN				= 0;
+	SMOOTHTHETATYPE_OFF					= 1;
+	SMOOTHTHETATYPE_ON					= 2;
+	SMOOTHTHETATYPE_CAPPED				= 3;
+	SMOOTHTHETATYPE_CAPPEDNORMALIZED	= 4;
+	SMOOTHTHETATYPE_DAILY				= 5;
+}
+
+enum RateConfiguration
+{
+	RATECONFIGURATION_UNKNOWN				= 0;
+	RATECONFIGURATION_PREMIUMANDSTOCK		= 1;
+	RATECONFIGURATION_PREMIUM				= 2;
+	RATECONFIGURATION_STOCK					= 3;
+	RATECONFIGURATION_PREMIUMANDDIVIDEND	= 4;
+}
+
+enum TimeUnit
+{
+	TIMEUNIT_UNKNOWN	= 0;
+	TIMEUNIT_DAY		= 1;
+	TIMEUNIT_WEEK		= 2;
+	TIMEUNIT_MONTH		= 3;
+	TIMEUNIT_YEAR		= 4;
+}
+
+enum RateAdjustmentType
+{
+	RATEADJUSTMENTTYPE_UNKNOWN			= 0;
+	RATEADJUSTMENTTYPE_FIXED			= 1;
+	RATEADJUSTMENTTYPE_CONSTANTOFFSET	= 2;
+}
+
+enum VolatilityType
+{
+	VOLATILITYTYPE_UNKNOWN	= 0;
+	VOLATILITYTYPE_MANUAL	= 1;
+	VOLATILITYTYPE_SCRIPT	= 2;
+	VOLATILITYTYPE_SABR		= 3;
+}
+
+// END ENUMS
+
+// BEGIN UNDERLYING SOURCE
+
+message UnderlyingSource
+{
+	optional UnderlyingSourceType	underlyingSourceType	= 1;
+	optional int32					futureIndex 			= 2;
+	optional bool					forwardsAreUnderlying	= 3;
+	optional PriceSourceType		priceSourceType			= 4;
+	optional UnderlyingBboType		bboType					= 5;
+	optional string					underlyingScriptName	= 6;
+	optional bool					separateSourceAtExpiry	= 7;
+}
+
+// END UNDERLYING SOURCE
+
+// BEGIN FORMULAS
+
+message Formulas
+{
+	optional string	futureFormula						= 1;
+	optional string	callFormula							= 2;
+	optional string	putFormula							= 3;
+	optional string	longTermCallFormula					= 4;
+	optional string	longTermPutFormula					= 5;
+	optional bool	forceBlackScholesForAmericanOptions	= 6;
+	optional bool	useLongTermFormulas					= 7;
+	optional int32	longTermExpirationIndex				= 8;
+}
+
+// END FORMULAS
+
+// BEGIN CORRECTIONS
+
+message Corrections
+{
+	optional double underlyingZeroOffset	= 1;
+	optional bool	zeroPremiumRate			= 2;
+	optional bool	fullRateCurve			= 3;
+}
+
+// END CORRECTIONS
+
+// BEGIN DAY CORRECTIONS
+
+message DayCorrections
+{
+	optional double dayCorrection		= 1;
+	optional double globalDayCorrection = 2;
+}
+
+// END DAY CORRECTIONS
+
+// BEGIN GREEKS
+
+message Greeks
+{
+	optional bool	greeksOnFuture		= 1;
+	optional bool	multipleFutures		= 2;
+	optional bool	useVolatilitySlope	= 3;
+	optional double	underlyingScaling	= 4;
+}
+
+// END GREEKS
+
+// BEGIN TIME CONTROL
+
+message TimeControl
+{
+	optional uint32 decayPeriod = 1;
+}
+
+// END TIME CONTROL
+
+// BEGIN IMPLIED VOLATILTY SETTINGS
+
+message ImpliedVolatilitySettings
+{
+	optional ImpliedVolatilityCalculationMode	impliedVolatilityCalculationMode	= 1;
+	optional ImpliedVolatilityBboType			impliedVolatilityBboType			= 2;
+}
+
+// END IMPLIED VOLATILTY SETTINGS
+
+// BEGIN IMPLIED VOLATILITY SMOOTHING
+
+message ImpliedVolatilitySmoothing
+{
+	optional bool		smoothIVEnabled		= 1;
+	optional double		smoothIVCoefficient	= 2;
+	optional CopyIVMode	copyIVMode			= 3;
+	optional double		deltaCutoff			= 4;
+	optional int32		windowSize			= 5;
+}
+
+// END IMPLIED VOLATILITY SMOOTHING
+
+
+// BEGIN BASIS ADJUSTMENT
+
+message BasisAdjustment
+{
+	optional bool	useManualAdjustment		= 1;
+	optional double	manualBasisAdjustment	= 2;
+}
+
+// END BASIS ADJUSTMENT
+
+// BEGIN OPTIONAL CALCULATIONS
+
+message OptionalCalculations
+{
+	optional bool computeFlatTheoretical	= 1;
+	optional bool computeImpliedVolatility	= 2;
+	optional bool computeVega				= 3;
+	optional bool computeRho				= 4;
+}
+
+// END OPTIONAL CALCULATIONS
+
+// BEGIN FILTERS
+
+message Filters
+{
+	optional string	underlyingRecalculationFilter	= 1;
+	optional double	derivativeRecalculationFilter	= 2;
+	optional double	lockStepFilter					= 3;
+}
+
+// END FILTERS
+
+
+// BEGIN PRECALC SETTINGS
+
+message PrecalcSettings
+{
+	optional bool								precalcEnabled						= 1;
+	optional uint32								numberOfInitialUnderlyingSteps		= 2;
+	optional double								underlyingRangeInPercentage			= 3;
+	optional bool								autoOptionErrorEnabled				= 5;
+	optional double								absoluteOptionError					= 6;
+	optional double								absoluteVolatilityError				= 4;
+	optional VolatilityRangeSpecificationType	volatilityRangeSpecificationType	= 7;
+	optional double								volatilityRange						= 8;
+	optional double								lowerVolatilityBoundary				= 9;
+	optional bool								correctedGreekEnabled				= 10;
+	optional bool								precalculateVolatilityEnabled		= 11;
+}
+
+// END PRECALC SETTINGS
+
+// BEGIN DIVIDENDS
+
+message Dividend
+{
+	optional int64	epochTime	= 1;
+	optional double	amount		= 2;
+}
+
+message Dividends
+{
+	optional bool		isProportional	= 1;
+	repeated Dividend	dividends		= 2;
+}
+
+// END DIVIDENDS
+
+// BEGIN TIME DECAY
+
+message HolidayFactor
+{
+	optional int64	epochTime = 1;
+	optional double factor = 2;
+}
+
+message TimeDecay
+{
+	optional SmoothThetaType smoothThetaType	= 1;
+	optional string smoothThetaFormula			= 2;
+	optional double businessDayFactor			= 3;
+
+	// weighting factors
+	repeated double halfhourlyFactors			= 4;
+	repeated double weeklyFactors				= 5;
+	repeated HolidayFactor holidayFactors		= 6;
+}
+
+// END TIME DECAY
+
+// BEGIN RATE SETTINGS
+
+message RateSettings
+{
+	optional RateConfiguration rateConfiguration = 1;
+}
+
+// END RATE SETTINGS
+
+// BEGIN BASIS AND OFFSETS
+
+message Offset
+{
+	optional int64 epochTime	= 1;
+	optional double value		= 2;
+	optional double safety		= 3;
+	optional string date		= 4;
+}
+
+message BasisAndOffsets
+{
+	optional double basis		= 1;
+	repeated Offset offsets		= 2;
+}
+
+// END BASIS AND OFFSETS
+
+// BEGIN RATES
+
+message TermRateAdjustment
+{
+	optional int32 time								= 1;
+	optional TimeUnit timeUnit						= 2;
+	optional double rateAdjustment					= 3;
+	optional RateAdjustmentType rateAdjustmentType	= 4;
+}
+
+message DateRateAdjustment
+{
+	optional int64 epochTime						= 1;
+	optional double rateAdjustment					= 2;
+	optional RateAdjustmentType rateAdjustmentType	= 3;
+	optional bool useExplicitDate					= 4;
+}
+
+message PremiumRates
+{
+	optional double baseRate							= 1;
+	repeated TermRateAdjustment termRateAdjustments		= 2;
+	optional bool perMarket								= 3;
+}
+
+message StockRates
+{
+	optional double baseRate							= 1;
+	repeated TermRateAdjustment termRateAdjustments		= 2;
+	repeated DateRateAdjustment dateRateAdjustments		= 3;
+}
+
+message DividendRates
+{
+	optional double baseRate							= 1;
+	repeated TermRateAdjustment termRateAdjustments		= 2;
+	repeated DateRateAdjustment dateRateAdjustments		= 3;
+}
+
+// END RATES
+
+// BEGIN VOLATILITY SETTINGS
+
+message VolatilitySettings
+{
+	optional VolatilityType	volatilityType			= 1;
+	optional string			volatilityScriptName	= 2;
+	optional string			bootstrapScriptName		= 3;
+}
+
+// END VOLATILITY SETTINGS
+
+// BEGIN SABR VOLATILITY
+
+message SABRParameter
+{
+	optional int64  epochTime		= 1;
+	optional double alpha			= 2;
+	optional double beta			= 3;
+	optional double volVol			= 4;
+	optional double rho				= 5;
+	optional double downCutOff		= 6;
+	optional double downSlope		= 7;
+	optional double downCurvature	= 8;
+	optional double upCutOff		= 9;
+	optional double upSlope			= 10;
+	optional double upCurvature		= 11;
+}
+
+message SABRVolatility
+{
+	repeated SABRParameter sabrCallParameters	= 1;
+	repeated SABRParameter sabrPutParameters	= 2;
+}
+
+// END SABR VOLATILITY
+
+// BEGIN MANUAL VOLATILITY
+
+message ManualVolatilityStrike
+{
+	optional double strike				= 1;
+	optional double volatility			= 2;
+}
+
+message ManualVolatilityExpiration
+{
+	optional int64 epochTime				= 1;
+	repeated ManualVolatilityStrike strikes = 2;
+}
+
+message ManualVolatility
+{
+	repeated ManualVolatilityExpiration callExpirations = 1;
+	repeated ManualVolatilityExpiration putExpirations = 2;
+}
+
+// END MANUAL VOLATILITY

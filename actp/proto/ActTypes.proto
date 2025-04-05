@@ -1,0 +1,57 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder ActTypes.proto
+
+syntax = "proto2";
+
+package ActAPI;
+
+// Operation status is passed from actant to client system and it describes the outcome of the
+// requested operation identified by the clientId. A failure is identified by the existence
+// of an error message
+message OperationStatus
+{
+	optional string errorMessage = 1;
+	optional uint32 errorStatusFlags = 2;			//	bitmask to transport additional informatino
+}
+
+// Generic name value pair to use for property bags
+message Property
+{
+	optional string name = 1;
+	optional string value = 2;
+}
+
+message DoubleProperty
+{
+	optional string name = 1;
+	optional double value = 2;
+}
+
+//	the message has been renamed to indicate that it contains scaled 32 bit quantities
+message ScaledBBO
+{
+	optional uint32 scaledNBid = 1;					//	scaled quantity
+	optional sint64 Bid = 2;						//	price
+	optional sint64 Ask = 3;						//	price
+	optional uint32 scaledNAsk = 4;					//	scaled quantity
+}
+
+message UniqueId
+{
+	optional uint32 id = 1;
+	optional uint64 changeCount = 2;				//	version number
+	optional string name = 3;
+}
+
+message AbsoluteLimit
+{
+	optional double minimum = 1;
+	optional double maximum = 2;
+}
+
+message PercentLimit
+{
+	optional double percentage = 1;
+	optional double minimum = 2;
+	optional double maximum = 3;
+}

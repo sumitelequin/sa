@@ -1,0 +1,111 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder ActOrders.proto
+
+syntax = "proto2";
+
+import "ActTypes.proto";
+
+package ActAutoControl;
+
+// The interactive id sent by the client application with every request to guarantee unique identification
+// of all requests. This helps avoid race conditions and allows proper sequencing when new actions
+// are taken without waiting for results of previous ones.
+// IIds are string that contain two numbers separated by : representing session id and request within session
+
+// Single automation status change request
+message AutomationUpdate
+{
+	optional string autoControlType = 1;
+	optional string automationStatus = 2;
+	//	the following fields are left out in the first version
+	//	- status change reason (masshold reason)
+	//	- flags for conflict resolution (e.g. release hitting quotes...)
+}
+
+// Update automation status for a product
+message ProductAutomationUpdate
+{
+	optional string product = 1;
+	optional string newIId = 2;
+	optional string oldIId = 3;
+
+	repeated AutomationUpdate statusChanges = 4;
+}
+
+message ProductAutomationResponse
+{
+	optional string product = 1;
+	repeated ActAPI.OperationStatus operationStatus = 2;
+}
+
+message ParameterAlias
+{
+	optional string PIParameterNames = 1;
+	optional string PEParameterNames = 2;
+	optional uint32 NumPEParameters = 3;
+	optional string PIWParameterNames = 4;
+}
+
+message AutomationSafetySettings
+{
+	optional string product = 1;
+	optional double AutoSafetyInterval = 2;
+	optional int32 AutoSafetyMaxHits = 3;
+}
+
+// Hold automation based on profiles
+//message SafetyAction
+//{
+//	repeated string product = 1;		//	if no product is specified, it's a global panic action accross all products
+//	optional string newIId = 2;
+//	optional string oldIId = 3;
+//
+//	optional string safetyProfile = 4;	//	predefined values: 'Masshold', 'SelectiveHold'
+//}
+
+// Request messages are passed from client->actant and are identified by RequestType enum
+enum RequestType
+{
+	REQ_AUTOCONTROL_UPDATE = 0;
+	REQ_GET_PARAMETER_ALIAS = 2;
+	REQ_UPDATE_PARAMETER_ALIAS = 3;
+	REQ_RESET_MM_PROTECTION = 4;
+	REQ_UPDATE_AUTOMATION_SAFETY = 5;
+	//REQ_SAFETY_ACTION = x;
+	//	future extensions
+	//	- retrieve/update custom automation profiles
+}
+
+// Response messages are passed from actant->client and are identified by ResponseType enum
+enum ResponseType
+{
+	RESP_AUTOCONTROL_UPDATE = 0;		//	confirms the initial message
+	RESP_PRODUCT_AUTOMATION = 1;		//	additional response per ProductAutomationResponse
+	RESP_GET_PARAMETER_ALIAS = 2;
+	RESP_UPDATE_PARAMETER_ALIAS = 3;
+	RESP_RESET_MM_PROTECTION = 4;
+	RESP_UPDATE_AUTOMATION_SAFETY = 5;
+	//RESP_SAFETY_ACTION = x;
+}
+
+// Requests are passed from client system and will contain only one of the specific requests
+message Request
+{
+	optional RequestType requestType = 1;
+	optional sint32 clientId = 2;
+	repeated ProductAutomationUpdate automationUpdates = 3;
+	//repeated SafetyAction safetyActions = 4;
+	optional ParameterAlias parameterAlias = 5;
+	optional string product = 6;
+	repeated AutomationSafetySettings automationSafetySettings = 7;
+}
+
+// Responses are passed from actant system and will contain only one of the specific responses.
+message Response
+{
+	optional ResponseType responseType = 1;
+	optional sint32 clientId = 2;
+	optional ActAPI.OperationStatus operationStatus = 3;
+	optional ProductAutomationResponse automationResponse = 4;
+	optional ParameterAlias parameterAlias = 5;
+}

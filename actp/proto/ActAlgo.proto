@@ -1,0 +1,77 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder ActAlgo.proto
+
+syntax = "proto2";
+
+import "ActTypes.proto";
+
+package ActAlgo;
+
+enum AlgoControlStatus
+{
+	ACS_Unknown = 0;
+	ACS_Off = 1;
+	ACS_Manual = 2;
+	ACS_Auto = 3;
+}
+
+
+message NamedInstrument
+{
+	optional string name = 1;
+	optional string instrument = 2;
+}
+
+message CreateDirectActionRequest
+{
+	optional string directActionName = 1;
+	optional string baseInstrument = 2;
+	repeated NamedInstrument additionalInstruments = 3;
+	repeated ActAPI.Property inputParameters = 4;
+	optional string actionStatus = 5;
+}
+
+message CreateDirectActionResponse
+{
+	optional string actionName = 1;
+	optional string automationStatus = 2;
+}
+
+
+// Request messages are passed from client->actant and are identified by RequestType enum
+enum RequestType
+{
+	REQ_CREATE_DIRECT_ACTION = 2;
+	REQ_SET_ALGO_STATUS = 4;
+	REQ_TERMINATE_ALGO = 5;
+}
+
+// Response messages are passed from actant->client and are identified by ResponseType enum
+enum ResponseType
+{
+	RESP_CREATE_DIRECT_ACTION = 2;
+	RESP_SET_ALGO_STATUS = 3;
+	RESP_TERMINATE_ALGO = 4;
+
+	//	broadcast messages
+}
+
+// Requests are passed from client system and will contain only one of the specific requests
+message Request
+{
+	optional RequestType requestType = 1;
+	optional sint32 clientId = 2;
+	optional CreateDirectActionRequest createDirectActionRequest = 5;
+	optional string algoName = 6;					//	e.g. NibbleTheor:D:0000002
+	optional AlgoControlStatus controlStatus = 7;
+}
+
+// Responses are passed from actant system and will contain only one of the specific responses.
+message Response
+{
+	optional ResponseType responseType = 1;
+	optional sint32 clientId = 2;
+	optional ActAPI.OperationStatus operationStatus = 3;
+	optional CreateDirectActionResponse createDirectActionResponse = 6;
+	optional string algoName = 9;					//	e.g. NibbleTheor:D:0000002
+}

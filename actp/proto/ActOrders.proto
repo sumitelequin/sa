@@ -1,0 +1,258 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder ActOrders.proto
+
+syntax = "proto2";
+
+import "ActTypes.proto";
+import "ActPort.proto";
+import "ActAlgo.proto";
+
+package ActOrders;
+
+// The interactive id sent by the client application with every request to guarantee unique identification
+// of all requests. This helps avoid race conditions and allows proper sequencing when new actions
+// are taken without waiting for results of previous ones.
+// IIds are string that contain two numbers separated by : representing session id and request within session
+
+
+// Add order message
+message AddOrder
+{
+	optional string	instrument = 1;
+	//	new orders don't yet have an order key
+	optional string newIId = 2;
+
+	//	order specification (required)
+	optional sint64 price = 3;
+	optional uint32 scaledQuantity = 4;						//	scaled quantity, will be deprecated
+	optional uint64 decQuantity = 19;						//	quantity with decimals
+	optional string side = 5;
+	optional string orderType = 6;
+
+	//	additional order details
+	optional bool noDefaultValues = 13;						//	when set to true, the server will use the values as is
+															//	empty fields will not be initialized with default values
+	optional string destination = 7;						//	MIC if destination isn't local to the market in instrument
+	optional string route = 14;								//	Route to which the order should be sent (native or execution vendor)
+	optional string account = 8;
+	optional string freeForm = 9;
+	optional string openClose = 10;							//	"Open"/"Close"
+	optional string flags = 15;								//	order flags
+	optional string expiration = 11;						//	YYYYMMDD
+	optional string counterpart = 12;
+	optional bool ignorePriceLimit = 17;					// override the price limit check
+	repeated ActAPI.Property properties = 16;
+}
+
+// Update order message
+message UpdateOrder
+{
+	optional string	instrument = 1;
+	optional string orderKey = 2;
+	optional string newIId = 3;
+	optional string oldIId = 4;
+
+	//	fields that can be updated
+	optional sint64 price = 5;
+	optional uint32 scaledQuantity = 6;						//	scaled quantity, will be deprecated
+	optional uint64 decQuantity = 15;						//	quantity with decimals
+	//	we don't allow changing side, order type, destination and route
+	optional string account = 7;
+	optional string freeForm = 8;
+	optional string openClose = 9;							//	"Open"/"Close"
+	optional string flags = 10;								//	order flags
+	optional string expiration = 11;						//	YYYYMMDD
+	optional string counterpart = 12;
+	optional bool ignorePriceLimit = 14;					// override the price limit check
+	repeated ActAPI.Property properties = 13;
+}
+
+// Delete order message
+message DeleteOrder
+{
+	optional string	instrument = 1;
+	optional string orderKey = 2;
+	optional string newIId = 3;
+	optional string oldIId = 4;
+}
+
+// Metadata request details
+message MetadataRequest
+{
+	optional string instrument = 1;
+	optional string bboType = 2;							//	"Main" (default), "Foreign", "Best", "Indicative", "Modifier"
+	optional string side = 3;								//	"Buy", "Sell"
+}
+
+// Order operation result is received for every order operation: add, update, delete
+// It contains
+// - Operation status that indicates whether the operation succeeded
+// - New and old interactive ids that were sent with the request
+// - OrderKey of the order acted upon, this key is uniquely identifying an order within the target actant system
+message OrderOperationResult
+{
+	optional string orderKey = 1;
+	optional string newIId = 2;
+	optional string oldIId = 3;
+}
+
+message OrderPropertyDefinition
+{
+	optional string name = 1;
+	optional string type = 2;
+	optional string defaultValue = 3;
+	optional string validator = 4;							//	name additional business validator
+}
+
+// The order type definition specifies one order type with all appropriate additional possible settings
+message OrderTypeDefinition
+{
+	optional string orderType = 1;							//	order type that is set in the order
+	optional string displayName = 2;						//	will be displayed on the button
+	optional string accounts = 3;							//	comma separated list of selectable accounts
+	optional string destinationRule = 7;					//	allows customization of the destinations
+	optional uint32 restrictions = 4;						//	flags that control the order fields and behavior
+	optional string flags = 5;								//	order flags
+	repeated OrderPropertyDefinition properties = 6;		//	addition order data in the form of a property bag
+}
+
+// Definition for Direct Action configuration
+message DirectActionDefinition
+{
+	optional string algoName = 1;							//	name of the Algo
+	repeated ActAPI.Property inputValues = 2;				//	input values
+	repeated ActAlgo.NamedInstrument additionalInstruments= 3;	//	additional instruments
+}
+
+// A destination specifies an exchange and a route (broker) through which it is reached
+message Destination
+{
+	optional string route = 1;								//	broker name or blank/empty for native connections
+	optional string exchange = 2;							//	MIC
+	optional string displayName = 3;						//	exchange name displayed in the combo box
+	repeated OrderTypeDefinition orderTypes = 4;			//	order types with their metadata
+	optional string businessOrderTypes = 5;					//	business order type for the given exchange
+}
+
+// The order data contains the complete order data and is used for broadcasts
+message OrderData
+{
+	optional string	instrument = 1;
+	optional string orderKey = 2;
+	optional string oldIId = 3;
+	optional string orderStatus = 4;
+
+	optional sint64 price = 5;
+	optional uint32 scaledQuantity = 6;						//	scaled quantity, will be deprecated
+	optional uint64 decQuantity = 20;						//	quantity with decimals
+	optional uint32 scaledActiveQuantity = 7;				//	scaled quantity, will be deprecated
+	optional uint64 decActiveQuantity = 21;					//	quantity with decimals
+	optional string side = 8;
+	optional string orderType = 9;
+	optional string destination = 10;						//	MIC if destination isn't local to the market in instrument
+	optional string route = 11;								//	Route to which the order should be sent (native or execution vendor)
+	optional string account = 12;
+	optional string freeForm = 13;
+	optional string openClose = 14;							//	"Open"/"Close"
+	optional string flags = 15;								//	order flags
+	optional string expiration = 16;						//	YYYYMMDD
+	optional string counterpart = 17;
+	optional string creator = 18;							//	automation controlling the order
+	repeated ActAPI.Property properties = 19;
+}
+
+// The order metadata contains all information to create an order editor dialog that supports
+// editing all known types of orders for all configurations
+message OrderMetadata
+{
+	optional string instrument = 1;
+	repeated Destination destinations = 2;
+	optional OrderData orderDefaultValues = 3;				//	the default values to initialize the order editor
+	optional ActPort.PortfolioAllocation allocation = 4;	//	information for allocation menu (empty if multi account not set)
+	// deprecated field number 5
+	optional bool supportRFQ = 6;							//	enable the RFQ button in the order editor
+	optional bool supportRFC = 7;							//	enable the RFC button in the order editor
+	optional string dualQuantity = 8;						//	currencies for dual quantity editing, exchange rate and precision (e.g. "USD,BTC,,4")
+	optional uint64 spinQuantity = 10;						//	step size for order editor quantity inc/dec
+	repeated DirectActionDefinition directActions = 9;		//	metadata for direct actions that can be started from the order editor
+}
+
+message OrderLimits
+{
+	//	all quantities are passed as scaled and quantity with decimals for now, the quantity with decimals always has priority
+
+	optional string product = 1;
+	optional uint32 scaledMaxOrderQuantity = 2;				//	scaled quantity, will be deprecated
+	optional int64 decMaxOrderQuantity = 12;
+	optional uint32 scaledMaxQuoteQuantity = 3;				//	scaled quantity, will be deprecated
+	optional int64 decMaxQuoteQuantity = 13;
+	optional string freeForm = 6;
+	optional string lendingBroker = 7;
+	optional uint32 scaledMaxMarketQuantity = 8;			//	scaled quantity, will be deprecated
+	optional int64 decMaxMarketQuantity = 14;
+	optional uint32 scaledQuantityIncDec = 11;				//	scaled quantity, will be deprecated
+	optional int64 decQuantityIncDec = 15;
+	optional uint32 scaledBBOClickQuantity = 9;				//	scaled quantity, will be deprecated
+	optional int64 decBBOClickQuantity = 16;
+	optional uint32 scaledNBBOClickQuantity = 10;			//	scaled quantity, will be deprecated
+	optional int64 decNBBOClickQuantity = 17;
+	optional ActAPI.PercentLimit orderPriceSafety = 4;
+	optional ActAPI.AbsoluteLimit absolutePriceLimits = 5;
+}
+
+// Request messages are passed from client->actant and are identified by RequestType enum
+enum RequestType
+{
+	REQ_ORDER_SEQ = 0;
+	REQ_ORDER_METADATA = 1;
+	REQ_ORDER_VALIDATION = 2;
+//	REQ_START_ORDER_SUBSCRIPTION = 3;
+	REQ_STOP_ORDER_SUBSCRIPTION = 4;
+	REQ_MARKET_EVENT  = 5;											//	send market event, data in addOrder
+	REQ_GET_ORDER_LIMITS = 6;
+	REQ_SET_ORDER_LIMITS = 7;
+}
+
+// Response messages are passed from actant->client and are identified by ResponseType enum
+enum ResponseType
+{
+	RESP_ORDER_SEQ = 0;
+	RESP_ADD_ORDER = 1;
+	RESP_UPDATE_ORDER = 2;
+	RESP_DELETE_ORDER = 3;
+	RESP_METADATA = 4;
+	RESP_ORDER_VALIDATION = 5;
+	RESP_ORDER_SUBSCRIPTION = 6;
+	RESP_MARKET_EVENT = 7;
+	RESP_GET_ORDER_LIMITS = 8;
+	RESP_SET_ORDER_LIMITS = 9;
+}
+
+// Requests are passed from client system and will contain only one of the specific requests
+// At the moment we support Add, Update and Delete request messages
+message Request
+{
+	optional RequestType requestType = 1;
+	optional sint32 clientId = 2;
+	repeated AddOrder addOrder = 3;
+	repeated UpdateOrder updateOrder = 4;
+	repeated DeleteOrder deleteOrder = 5;
+	optional MetadataRequest metadataRequest = 6;
+	optional string orderKey = 7;							//	used for order subscription, can be combined with metadata request
+															//	"BestMan" will retrieve the best manual order
+	optional string marketEventType = 8;					//	currently supported: "RFQ", "RFC"
+	repeated OrderLimits limitsDefinitions = 9;
+}
+
+// Responses are passed from actant system and will contain only one of the specific responses.
+// At the moment we support Add, Update and Delete response messages
+message Response
+{
+	optional ResponseType responseType = 1;
+	optional sint32 clientId = 2;
+	optional ActAPI.OperationStatus operationStatus = 3;
+	optional OrderOperationResult orderOperationResult = 4;
+	optional OrderMetadata orderMetadata = 5;
+	optional OrderData orderData = 6;						//	used for subscriptions
+	repeated OrderLimits limitsDefinitions = 7;
+}

@@ -1,0 +1,82 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder ActStrategy.proto
+
+syntax = "proto2";
+
+import "ActTypes.proto";
+
+package ActStrategy;
+
+message StrategyLeg
+{
+	optional string	instrument = 1;
+	optional sint64 price = 2;						//	URef for stock/future, Manual UPrice for options
+	optional int32 legQuantity = 3;
+}
+
+message StrategyComposition
+{
+	repeated StrategyLeg legs = 1;
+	optional int32 RatioScaling = 2;
+}
+
+message StrategyQuotes
+{
+	optional ActAPI.ScaledBBO ownBBO = 1;			//	for backwards compatibility reasons the strategy protocol continues
+	optional ActAPI.ScaledBBO brokerBBO = 2;		//	to use scaled quantities in the OTC Watch server
+	optional string notes = 3;
+}
+
+enum Creatability
+{
+	STRATEGY_NOT_CREATABLE = 0;
+	STRATEGY_CREATABLE = 1;
+	STRATEGY_CREATED = 2;
+}
+
+message StrategyIdentification
+{
+	optional Creatability creatability = 1;
+	optional string strategyTypeName = 2;
+	optional string strategyInstrument = 3;
+	optional bool supportRFQ = 4;
+}
+
+
+// Request messages are passed from client->actant and are identified by RequestType enum
+enum RequestType
+{
+	REQ_IDENTIFY_STRATEGY = 0;
+	REQ_CREATE_STRATEGY = 1;
+	REQ_SAVE_STRATEGY = 5;
+}
+
+// Response messages are passed from actant->client and are identified by ResponseType enum
+enum ResponseType
+{
+	RESP_IDENTIFY_STRATEGY = 0;
+	RESP_CREATE_STRATEGY = 1;
+	RESP_SAVE_STRATEGY = 5;
+}
+
+// Requests are passed from client system and will contain only one of the specific requests
+message Request
+{
+	optional RequestType requestType = 1;
+	optional sint32 clientId = 2;
+	optional StrategyComposition strategy = 3;
+	optional string uuid = 4;
+	optional string StrategyInstrument = 5;
+	optional StrategyQuotes strategyQuotes = 6;
+}
+
+// Responses are passed from actant system and will contain only one of the specific responses.
+message Response
+{
+	optional ResponseType responseType = 1;
+	optional sint32 clientId = 2;
+	optional ActAPI.OperationStatus operationStatus = 3;
+	optional StrategyIdentification strategyIdentification = 4;
+	optional StrategyComposition strategy = 6;
+	optional StrategyQuotes strategyQuotes = 7;
+}

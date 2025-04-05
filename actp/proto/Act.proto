@@ -1,0 +1,157 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder Act.proto
+
+syntax = "proto2";
+
+import "DataExchangeAPI.proto";
+import "ActOrders.proto";
+import "ActTypes.proto";
+import "ActAutoControl.proto";
+import "ActStrategy.proto";
+import "ActTrades.proto";
+import "ActTicks.proto";
+import "ActValuation.proto";
+import "ActInstrument.proto";
+import "ActAlgo.proto";
+
+package ActAPI;
+
+// Versioning of the Act protocol
+enum ProtocolVersion
+{
+	APV_SET_ALGO_STATUS = 1;
+	APV_TERMINATE_ALGO = 2;
+//	!!!!!!!!!! don't forget to update ACT_PROTOCOL_VERSION below when adding a new version
+}
+
+enum LatestVersion
+{
+	ACT_PROTOCOL_VERSION = 2;			//	always set to the latest version above
+}
+
+// Request messages are passed from client->actant and are identified by RequestType enum
+enum SubProtocolType
+{
+	SUB_PROTO_DEX = 0;
+	SUB_PROTO_ORDER = 1;
+	SUB_PROTO_ACT = 3;
+	SUB_PROTO_AUTOCONTROL = 4;
+	SUB_PROTO_STRATEGY = 5;
+	SUB_PROTO_TRADE = 6;
+	SUB_PROTO_VALUATION = 7;
+	SUB_PROTO_TICK = 8;
+	SUB_PROTO_ALGO = 9;
+	SUB_PROTO_INSTRUMENT = 11;
+}
+
+// Request messages are passed from client to actant and are identified by RequestType enum
+enum RequestType
+{
+	REQ_LOGIN = 0;
+	REQ_LOGOUT = 1;
+}
+
+// Response messages are passed from actant to client and are identified by ResponseType enum
+enum ResponseType
+{
+	RESP_LOGIN = 0;
+	RESP_CONNECTION_STATUS_BROADCAST = 3;
+}
+
+enum FailureAction
+{
+	ACTION_VISUAL_WARNING = 0;
+	ACTION_HOLD_ALL = 1;
+	ACTION_SELECTIVE_HOLD = 2;
+}
+
+enum SessionOption
+{
+	SESSION_OPTION_UNUSED = 0;
+	SESSION_OPTION_BROADCAST_CONNECTION_STATUS = 3;
+}
+
+message ActLoginRequest
+{
+	optional string username = 1;
+	optional string password = 2;
+	optional string appname = 3;
+	repeated FailureAction failureActions = 4;
+	repeated SessionOption sessionOptions = 5;
+	repeated Property clientProperties = 6;
+}
+
+
+
+message ActLoginResponse
+{
+	optional string Version = 1;						//	Actant version (e.g. 3.76.0.0)
+	optional string LinkTime = 2;
+	optional string Node = 3;
+	optional string User = 4;							//	Windows user
+	optional bool hasAllocations = 5;					//	Multi-user mode or other way to set ALLOCATIONS correctly in DEX
+	repeated Property properties = 12;
+	optional int32 actProtocolVersion = 13;				//	allows simple test if a new feature is available
+}
+
+enum ConnectionStatus
+{
+	CONNECTION_DISCONNECTED = 0;
+	CONNECTION_CONNECTING = 1;
+	CONNECTION_CONNECTED = 2;
+}
+
+message Connection
+{
+	optional string name = 1;
+	optional ConnectionStatus status = 2;
+}
+
+message ActRequest
+{
+	optional RequestType requestType = 1;
+	optional sint32 clientId = 2;					//	unique id for a request assigned by client app
+	optional ActLoginRequest loginRequest = 3;
+}
+
+message ActResponse
+{
+	optional ResponseType responseType = 1;
+	optional sint32 clientId = 2;					//	clientId sent in request
+	optional OperationStatus operationStatus = 3;
+	optional uint32 sessionId = 4;					//	id assigned to each client application during login
+	optional ActLoginResponse loginResponse = 5;
+	repeated Connection connections = 6;
+}
+
+// Requests are passed from client system and will contain only one of the specific requests
+message Request
+{
+	optional SubProtocolType subProtocolType = 1;
+	optional DataExchangeAPI.Request dexRequest = 2;
+	optional ActOrders.Request orderRequest = 3;
+	optional ActRequest actRequest = 5;
+	optional ActAutoControl.Request autoControlRequest = 6;
+	optional ActStrategy.Request strategyRequest = 7;
+	optional ActTrades.Request tradeRequest = 8;
+	optional ActValuation.Request valuationRequest = 9;
+	optional ActTicks.Request tickRequest = 10;
+	optional ActAlgo.Request algoRequest = 11;
+	optional ActInstrument.Request instrumentRequest = 13;
+}
+
+// Responses are passed from actant system and will contain only one of the specific responses.
+message Response
+{
+	optional SubProtocolType subProtocolType = 1;
+	optional DataExchangeAPI.Response dexResponse = 2;
+	optional ActOrders.Response orderResponse = 3;
+	optional ActResponse actResponse = 5;
+	optional ActAutoControl.Response autoControlResponse = 6;
+	optional ActStrategy.Response strategyResponse = 7;
+	optional ActTrades.Response tradeResponse = 8;
+	optional ActValuation.Response valuationResponse = 9;
+	optional ActTicks.Response tickResponse = 10;
+	optional ActInstrument.Response instrumentResponse = 11;
+	optional ActAlgo.Response algoResponse = 12;
+}

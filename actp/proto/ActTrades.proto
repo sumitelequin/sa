@@ -1,0 +1,83 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder ActTrades.proto
+
+syntax = "proto2";
+
+import "ActTypes.proto";
+import "ActStrategy.proto";
+
+package ActTrades;
+
+// The trade data contains all fields that a trade may contain
+message TradeData
+{
+	optional string instrument = 1;
+	optional string tradeKey = 2;
+	optional string newIId = 3;
+	optional string oldIId = 4;
+
+	optional sint64 price = 5;
+	optional uint32 scaledQuantity = 6;				//	scaled quantity, will be deprecated
+	optional uint64 decQuantity = 19;				//	quantity with decimals
+	optional string side = 7;
+	optional double fee = 8;
+	optional double commission = 9;
+	optional string account = 10;
+	optional string freeForm = 11;
+	optional string marketUser = 12;
+	optional string marketMember = 13;
+	optional string portfolioName = 14;
+	optional string tradeNumber = 15;
+	optional string broker = 16;
+	optional bool yesterday = 18;
+
+	optional ActStrategy.StrategyComposition strategyLegs = 17;		//	leg details for strategy trades
+
+}
+
+
+// Request messages are passed from client->actant and are identified by RequestType enum
+enum RequestType
+{
+	REQ_TRADE_ADD = 3;
+	REQ_TRADE_UPDATE = 4;
+	REQ_TRADE_DELETE = 5;
+	REQ_TRADE_MOVE = 7;
+	REQ_TRADE_DATA = 6;
+	REQ_CREATE_PORTFOLIO = 10;
+}
+
+// Response messages are passed from actant->client and are identified by ResponseType enum
+enum ResponseType
+{
+	RESP_ADD_TRADE = 2;
+	RESP_UPDATE_TRADE = 3;
+	RESP_DELETE_TRADE = 4;
+	RESP_MOVE_TRADE = 6;
+	RESP_TRADE_DATA = 5;
+	RESP_CREATE_PORTFOLIO = 7;
+}
+
+// Requests are passed from client system and will contain only one of the specific requests
+// At the moment we support Add, Update and Delete request messages
+message Request
+{
+	optional RequestType requestType = 1;
+	optional sint32 clientId = 2;
+	optional TradeData tradeData = 3;
+	repeated string instruments = 4;						//	used for metadata request (trade and ev. leg instruments)
+	optional string product = 5;							//	backup for strategies that are not yet created
+	optional string tradeKey = 6;							//	used to retrieve specific trade
+	optional string portfolio = 7;							//	used to move trades (possibly should be a structure)
+	optional bool ignorePriceStep = 8;						//	don't validate the trade price
+}
+
+// Responses are passed from actant system and will contain only one of the specific responses.
+message Response
+{
+	optional ResponseType responseType = 1;
+	optional sint32 clientId = 2;
+	optional ActAPI.OperationStatus operationStatus = 3;
+	optional string newIId = 4;
+	optional TradeData tradeData = 5;						//	requested trade
+}

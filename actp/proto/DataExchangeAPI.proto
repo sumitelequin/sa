@@ -1,0 +1,134 @@
+// build C++ using:
+// protoc.exe --cpp_out=YourOutputFolder DataExchangeAPI.proto
+
+syntax = "proto2";
+
+package DataExchangeAPI;
+
+// Variant type is used to identify transported variant value
+// Currently supported variant types: an int, a price, a double and a string
+// Prices are encoded as a 64-bit int multiplied by 10�000�000
+enum VariantType
+{
+	VAR_UNKNOWN = 0;
+	VAR_INT32 = 1;
+	VAR_PRICE = 2;
+	VAR_DOUBLE = 3;
+	VAR_STRING = 4;
+}
+
+// Variant value contains only one of the possible optional fields at any given time
+message VariantValue
+{
+	optional int32 varInt = 1;
+	optional int64 varPrice = 2;
+	optional double varDouble = 3;
+	optional string varString = 4;
+	optional sint64 varQuantity = 5;
+}
+
+// Column descriptor contains the name of the actant field like THEORETICALS.DELTA or POSITION.DELTA
+// followed by the type used for encoding that field, the variant type is not repeated for every row
+// This information can be memorized for more optimal processing of the cells.
+message ColumnDescriptor
+{
+	optional string name = 1;
+	optional VariantType type = 2;
+	optional bool isVector = 3;
+	optional bool canWrite = 4;
+	optional string alias = 5;
+}
+
+// A cell contains the number of the corresponding column (0-based) and the variant containing the value
+message Cell
+{
+	optional int32 columnNumber = 1;
+	optional VariantValue value = 2;
+	repeated VariantValue valueVector = 3;
+}
+
+// A row contains a key string followed by a sparse sequence of cells. At least one cell is always
+// being transferred.
+message Row
+{
+	optional string key = 1;
+	optional string contexts = 3;
+	repeated Cell cell = 2;
+}
+
+// Table update contains column descriptors followed by a sequence of rows.
+// Only the initial update will contain column descriptors as well as full snapshot
+// of all the rows.
+// Subsequent updates will contain only changing rows and within them the changing cells.
+// The client id has to be initialized when the table update is used in a request.
+message TableUpdate
+{
+	repeated ColumnDescriptor columnDescriptor = 1;
+	repeated Row row = 2;
+}
+
+// Request messages are passed from client->actant and are identified by RequestType enum
+enum RequestType
+{
+	REQ_START_QUERY = 0;
+	REQ_STOP_QUERY = 1;
+	REQ_TABLE_UPDATE = 2;
+}
+
+// Response messages are passed from actant->client and are identified by ResponseType enum
+enum ResponseType
+{
+	RESP_START_QUERY = 0;
+	RESP_STOP_QUERY = 1;
+	UPDATE_TABLE = 2;
+	RESP_TABLE_UPDATE = 3;
+}
+
+// Start query message contains
+// - sequence of scope keys (see separate document for supported values)
+// - sequence of field names (see separate document for supported values)
+// - boolean whether the query is a one-time request that does not require
+// a cancellation message
+// - frequency specification expressed in milliseconds. Value of 0 means real-
+// - subset of field names listed above that will not trigger an update when their value changes
+message StartQuery
+{
+	repeated string scopeKey = 1;
+	repeated string field = 2;
+	optional bool oneTime = 3;
+	optional int32 frequency = 4;
+	repeated string noTrigger = 5;
+	repeated string context = 6;
+}
+
+// Operation status is passed from actant to client system and it describes the outcome of the
+// requested operation identified by the clientId. A failure is identified by the existence
+// of an error message
+message OperationStatus
+{
+	optional string errorMessage = 1;
+}
+
+// Requests are passed from client system and will contain only one of the specific requests
+// At the moment we support Start and Stop Query messages and Table Update to send data back
+// to the application. The Stop Query doesn't have a request body.
+// The clientId uniquely identifies the request within the client system, this number must be
+// unique for each socket session established between actant and client software
+message Request
+{
+	optional RequestType requestType = 1;
+	optional int32 clientId = 2;
+	optional StartQuery startQuery = 3;
+	optional TableUpdate tableUpdate = 4;
+}
+
+// Responses are passed from actant system and will contain only one of the specific responses.
+// At the moment we support Start and Stop Query response messages and Table Update
+// The clientId received in the request is repeated in the response.
+message Response
+{
+	optional ResponseType responseType = 1;
+	optional int32 clientId = 2;
+	optional OperationStatus operationStatus = 3;
+	optional TableUpdate tableUpdate = 4;
+}
