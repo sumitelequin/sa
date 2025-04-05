@@ -3,6 +3,9 @@ from actp import session
 
 def load_direct_actions_from_csv(filepath: str) -> list[session.DirectActionData]:
     df = pd.read_csv(filepath)
+    df = df.drop(columns=['comments'], errors='ignore')
+    df = df[df['to_trade_today'].astype(str).str.lower().isin(['true', '1', 'yes'])]
+
     da_list = []
 
     for _, row in df.iterrows():

@@ -1,3 +1,13 @@
-name,base_instrument,BS,BC,BWQ,status
-sm__da__bestbid,XCME.CB.F.F.MAY25.JUN25.0,-10,-6,1,Disabled
-sm__da__bestbid,XCME.CB.F.F.JUN25.JUL25.0,-15,-8,2,Disabled
+to_trade_today,name,base_instrument,BS,BC,BWQ,AS,AF,AWQ,status,comments
+TRUE,sm__da__bestbid,XCME.CB.F.F.MAY25.JUN25.0,-10,-6,1,,,,Disabled,
+TRUE,sm__da__bestbid,XCME.CB.F.F.JUN25.JUL25.0,-15,-8,1,,,,Disabled,
+FALSE,sm__da__bestbid,XCME.GNF.F.F.MAY25.JUN25.0,-5,-3,2,,,,Disabled,
+FALSE,sm__da__bestbid,XCME.GNF.F.F.MAY25.JUL25.0,-7,-6,2,,,,Disabled,
+FALSE,sm__da__bestbid,XCME.GNF.F.F.JUN25.JUL25.0,-5,-3,2,,,,Disabled,
+FALSE,sm__da__bestbid,XCME.GNF.F.F.JUL25.AUG25.0,-7,-6,2,,,,Disabled,
+FALSE,sm__da__bestbid,XCME.DC.F.F.MAY25.JUN25.0,-0.2,-0.05,1,,,,Disabled,
+FALSE,sm__da__bestask,XCME.DC.F.F.JUL25.OCT25.0,,,,2,1.5,3,Disabled,
+FALSE,sm__da__bestbid,XCME.GF.F.F.AUG25.SEP25.0,,,1,,,,Disabled,
+FALSE,sm__da__bestbid,XCME.LE.F.F.AUG25.OCT25.0,,,1,,,,Disabled,
+FALSE,sm__da__bestbid,XCME.LE.F.F.DEC25.FEB26.0,,,1,,,,Disabled,
+FALSE,sm__da__bestbid,XCME.LE.F.F.OCT25.DEC25.0,,,1,,,,Disabled,
