@@ -1,4 +1,0 @@
-IP = "10.16.6.165"
-PORT = 4724
-USER = "SUMIT"
-PASSWORD = ""
