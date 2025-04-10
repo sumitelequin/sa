@@ -20,6 +20,7 @@ def convert_fractional_price(value: str) -> str:
 def load_direct_actions_from_csv(filepath: str) -> list[session.DirectActionData]:
     df = pd.read_csv(filepath)
     # Filter rows where 'to_trade_today' is true/yes/1
+    df = df[df['to_trade_global'].astype(str).str.lower().isin(['true', '1', 'yes'])]
     df = df[df['to_trade_today'].astype(str).str.lower().isin(['true', '1', 'yes'])]
  
     # Drop 'comments' column if it exists

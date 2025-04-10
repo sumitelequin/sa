@@ -1,2 +1,0 @@
-import actp
-dir(actp)

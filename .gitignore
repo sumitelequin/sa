@@ -177,3 +177,4 @@ direct_action/orders__da__bestbid_n_bestask.csv
 dexdata.csv
 direct_action/orders__da__bestbid_n_bestask.csv
 direct_action/config.py
+direct_action/zc_snapshot.csv
